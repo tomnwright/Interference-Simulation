@@ -1,5 +1,5 @@
 import math,time
-from PIL import Image
+from PIL import Image, ImageDraw
 def get_dist(a,b):
     x = a[0]-b[0]
     y = a[1]-b[1]
@@ -50,6 +50,22 @@ def get_i(d, f, t, s, w):
         return math.sin(
             (2*math.pi* ((f*d)-(t*s*w)))/(f*w*s)
         )
+def get_Peak(n,t,l,s,f):
+    '''
+        :param n: nth peak
+        :param t: time(frames)
+        :param l: lambda (wavelength)
+        :param s: Scale (pixels per meter)
+        :param f: frame rate '''
+    return ((t-((n+0.75)*f))*l*s)/f
+def get_Trough(n,t,l,s,f):
+    '''
+        :param n: nth trough
+        :param t: time(frames)
+        :param l: lambda (wavelength)
+        :param s: Scale (pixels per meter)
+        :param f: frame rate '''
+    return ((t-((n+0.25)*f))*l*s)/f
 
 def render_imgV(res,frame_rate,time, pixel_scale, wavelength,separation=0.3):
     img = Image.new('RGB', res)
@@ -97,6 +113,34 @@ def render_imgH(res,frame_rate,time, pixel_scale, wavelength,separation=0.3):
             i_total = (i_a+i_b)/2
             img.putpixel((x,y,),colour.get_rgb(i_total))
     return img
+
+def render_contours(peak_or_trough,res,frame_rate,time, pixel_scale, wavelength,separation=0.3):
+    img_L = Image.new('RGBA', res); img_R = Image.new('RGBA', res)
+    img_Ldraw = ImageDraw.Draw(img_L,'RGBA'); img_Rdraw = ImageDraw.Draw(img_R,'RGBA')
+    #sources
+    A = (
+        int((res[0]+ (res[0]*separation))/2),
+        int(res[1]/2),
+        )
+    B = (
+        int((res[0]- (res[0]*separation))/2),
+        int(res[1]/2),
+        )
+    #print(A,B)
+    i = 0
+    while True:
+        r = [get_Trough(i,time,wavelength,pixel_scale,frame_rate),get_Peak(i,time,wavelength,pixel_scale,frame_rate)][peak_or_trough]
+        if r<0:
+            break
+        else:
+            img_Rdraw.ellipse((A[0]-r, A[1]-r, A[0]+r, A[1]+r),(0, 0, 0, 0),outline = 'white')#,width=3)
+            img_Ldraw.ellipse((B[0]-r, B[1]-r, B[0]+r, B[1]+r),(0, 0, 0, 0),outline = 'white')
+        i+=1
+    del img_Ldraw; del img_Rdraw
+    return Image.alpha_composite(img_L, img_R)
+
+    
+
 def render_animation(folder, start, end, **kwargs):
     for frame in range(start,end):
 
@@ -107,6 +151,19 @@ def render_animation(folder, start, end, **kwargs):
         x.save('{}/frame_{}.png'.format(folder,frame),format = 'PNG')
         print(frame)
 
+def animate_contours(start, end, **kwargs):
+    for frame in range(start, end):
+        print(frame, end='')
+        x = render_contours(0, #denotes peak/trough
+            time = frame,
+            **kwargs)
+        x.save('troughs/{}.png'.format(frame), format = 'PNG')
+
+        y = render_contours(1, #denotes peak/trough
+            time = frame,
+            **kwargs)
+        y.save('peaks/{}.png'.format(frame), format = 'PNG')
+        print(': COMPLETE')
 '''x = render_imgH(
     res = (1280,720,),
     frame_rate = 25,
@@ -119,10 +176,10 @@ x.show()'''
 
 
 if __name__ == '__main__':
-    render_animation(str(choice),400,540,
-    res = (1280,720,),
-    frame_rate = 25,
-    pixel_scale = 50,
-    wavelength =  1,
-    separation = 0.1)
+    animate_contours(0,1000,
+        res = (1280,720,),
+        frame_rate = 25,
+        pixel_scale = 50,
+        wavelength =  1,
+        separation = 0.1)
 #started at 2021 ish
