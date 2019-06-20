@@ -1,11 +1,17 @@
 import math,time
 from PIL import Image, ImageDraw
-def get_dist(a,b):
+
+def get_dist2D(a,b):
     x = a[0]-b[0]
     y = a[1]-b[1]
     return math.sqrt((x**2)+(y**2))
-
+def compile(images):
+    img = images[0]
+    for i in images[1:]:
+        img = Image.alpha_composite(img,i)
+    return img
 class colour:
+    #colour ramp
     @staticmethod
     def get_rgb(n):
         return (
@@ -31,155 +37,126 @@ class colour:
             return 1-n
         else:
             return n+1
+class wave:
     @staticmethod
-    def quad(n):
-        '''colour ramp for -1<=n<=+1'''
-        out  = 1 - (n**2)
-        return out
-def get_i(d, f, t, s, w):
-    '''
-    :param d: distance
-    :param f: frame rate
-    :param t: time (frames)
-    :param s: scale (pixels per meter)
-    :param w: wavelength'''
-    leading_edge = (t*s*w)/f
-    if d>leading_edge:
-        return 0
-    else:
-        return math.sin(
-            (2*math.pi* ((f*d)-(t*s*w)))/(f*w*s)
-        )
-def get_Peak(n,t,l,s,f):
-    '''
-        :param n: nth peak
-        :param t: time(frames)
-        :param l: lambda (wavelength)
-        :param s: Scale (pixels per meter)
-        :param f: frame rate '''
-    return ((t-((n+0.75)*f))*l*s)/f
-def get_Trough(n,t,l,s,f):
-    '''
-        :param n: nth trough
-        :param t: time(frames)
-        :param l: lambda (wavelength)
-        :param s: Scale (pixels per meter)
-        :param f: frame rate '''
-    return ((t-((n+0.25)*f))*l*s)/f
+    def get_Intensity(d, f, t, s, w):
+        '''
+        Get Wave Intensity
 
-def render_imgV(res,frame_rate,time, pixel_scale, wavelength,separation=0.3):
-    img = Image.new('RGB', res)
-    #sources
-    A = (
-        int(res[0]/2),
-        int((res[1]+ (res[1]*separation))/2)
-        )
-    B = (
-        int(res[0]/2),
-        int((res[1]- (res[1]*separation))/2)
-        )
-    print(A,B)
-
-    settings = (frame_rate, time, pixel_scale, wavelength)
-    for x in range(res[0]):
-        for y in range(res[1]):
-            loc = (x,y,)
-            i_a = get_i(get_dist(A,loc),*settings)
-            i_b = get_i(get_dist(B,loc),*settings)
-            i_total = (i_a+i_b)/2
-            img.putpixel((x,y,),colour.get_rgb(i_total))
-    return img
-def render_imgH(res,frame_rate,time, pixel_scale, wavelength,separation=0.3):
-    img = Image.new('RGB', res)
-    #sources
-    A = (
-        int((res[0]+ (res[0]*separation))/2),
-        int(res[1]/2),
-        )
-    B = (
-        int((res[0]- (res[0]*separation))/2),
-        int(res[1]/2),
-        )
-    #print(A,B)
-
-    settings = (frame_rate, time, pixel_scale, wavelength)
-    for x in range(res[0]):
-        for y in range(res[1]):
-            loc = (x,y,)
-
-            i_a = get_i(get_dist(A,loc),*settings)
-            i_b = get_i(get_dist(B,loc),*settings)
-            
-            i_total = (i_a+i_b)/2
-            img.putpixel((x,y,),colour.get_rgb(i_total))
-    return img
-
-def render_contours(peak_or_trough,res,frame_rate,time, pixel_scale, wavelength,separation=0.3):
-    img_L = Image.new('RGBA', res); img_R = Image.new('RGBA', res)
-    img_Ldraw = ImageDraw.Draw(img_L,'RGBA'); img_Rdraw = ImageDraw.Draw(img_R,'RGBA')
-    #sources
-    A = (
-        int((res[0]+ (res[0]*separation))/2),
-        int(res[1]/2),
-        )
-    B = (
-        int((res[0]- (res[0]*separation))/2),
-        int(res[1]/2),
-        )
-    #print(A,B)
-    i = 0
-    while True:
-        r = [get_Trough(i,time,wavelength,pixel_scale,frame_rate),get_Peak(i,time,wavelength,pixel_scale,frame_rate)][peak_or_trough]
-        if r<0:
-            break
+        :param d: distance
+        :param f: frame rate
+        :param t: time (frames)
+        :param s: scale (pixels per meter)
+        :param w: wavelength'''
+        leading_edge = (t*s*w)/f
+        if d>leading_edge:
+            return 0
         else:
-            img_Rdraw.ellipse((A[0]-r, A[1]-r, A[0]+r, A[1]+r),(0, 0, 0, 0),outline = 'white')#,width=3)
-            img_Ldraw.ellipse((B[0]-r, B[1]-r, B[0]+r, B[1]+r),(0, 0, 0, 0),outline = 'white')
-        i+=1
-    del img_Ldraw; del img_Rdraw
-    return Image.alpha_composite(img_L, img_R)
-
-    
-
-def render_animation(folder, start, end, **kwargs):
-    for frame in range(start,end):
-
-        x = render_imgH(
-            time=frame,
-            **kwargs
+            return math.sin(
+                (2*math.pi* ((f*d)-(t*s*w)))/(f*w*s)
             )
-        x.save('{}/frame_{}.png'.format(folder,frame),format = 'PNG')
-        print(frame)
+    @staticmethod
+    def get_Peak(n,t,l,s,f):
+        '''
+            :param n: nth peak
+            :param t: time(frames)
+            :param l: lambda (wavelength)
+            :param s: Scale (pixels per meter)
+            :param f: frame rate '''
+        return ((t-((n+0.75)*f))*l*s)/f
+    @staticmethod
+    def get_Trough(n,t,l,s,f):
+        '''
+            :param n: nth trough
+            :param t: time(frames)
+            :param l: lambda (wavelength)
+            :param s: Scale (pixels per meter)
+            :param f: frame rate '''
+        return ((t-((n+0.25)*f))*l*s)/f
 
-def animate_contours(start, end, **kwargs):
-    for frame in range(start, end):
-        print(frame, end='')
-        x = render_contours(0, #denotes peak/trough
-            time = frame,
-            **kwargs)
-        x.save('troughs/{}.png'.format(frame), format = 'PNG')
+class handler:
+    def __init__(self, sources=[], res=(0,0,), scale=1):
+        '''
+        :param sources: List of sources (class: source)
+        :param res: Resolution
+        :param scale: Pixel Scale/ pixels per metre'''
+        self.sources = sources
+        self.res = res
+        self.scale = scale
 
-        y = render_contours(1, #denotes peak/trough
-            time = frame,
-            **kwargs)
-        y.save('peaks/{}.png'.format(frame), format = 'PNG')
-        print(': COMPLETE')
-'''x = render_imgH(
-    res = (1280,720,),
-    frame_rate = 25,
-    time = 1500,
-    pixel_scale = 50,
-    wavelength =  1,
-    separation = 0.1
-    )
-x.show()'''
+    def render_img(self, time, frame_rate):
+        img = Image.new('RGB', self.res)
+        for x in range(self.res[0]):
+            for y in range(self.res[1]):
+                loc = (x,y,)
+                i_total = 0
+                for s in self.sources:
+                    i_total += wave.get_Intensity(
+                        get_dist2D(s.location, loc),
+                        frame_rate,
+                        time,
+                        self.scale,
+                        s.wavelength
+                        )
+                i_total = (i_total)/len(self.sources)
+                img.putpixel((x,y,),colour.get_rgb(i_total))
+        return img
+    
+    def render_animation(self, file, frames, frame_rate):
+        for frame in range(frames[0],frames[1]):
+            print(frame,end = '')
+            out_img = self.render_img(frame, frame_rate)
+            out_img.save('{}{}.png'.format(file,frame),format = 'PNG')
+            print(': Saved')
 
+    def render_contours(self, pOt, time, frame_rate):
+        '''
+        :param pOt: peak Or trough
+        :param time: time (frames)
+        '''
+        rendered = []
+        for s in self.sources:
+            loc = s.location
+            img_render = Image.new('RGBA', self.res)
+            img_draw = ImageDraw.Draw(img_render, 'RGBA')
+            i = 0
+            while True:
+                r = pOt(i, time, s.wavelength, self.scale, frame_rate)
+                if r<0:
+                    break
+                else:
+                    img_draw.ellipse((loc[0]-r, loc[1]-r, loc[0]+r, loc[1]+r),(0, 0, 0, 0),outline = 'white')
+                i+=1
+            del img_draw
+            rendered.append(img_render)
+        return compile(rendered)
+
+    def animate_contours(self, file, frames, frame_rate):
+
+        for frame in range(frames[0], frames[1]):
+            print(frame, end='')
+
+            out_t = self.render_contours(wave.get_Peak, frame, frame_rate)
+            out_t.save('{}troughs{}.png'.format(file, frame), format = 'PNG')
+
+            out_p = self.render_contours(wave.get_Trough, frame, frame_rate)
+            out_p.save('{}peaks{}.png'.format(file, frame), format = 'PNG')
+
+            print(': Saved')
+
+class source:
+    def __init__(self, location, wavelength, phase):
+        self.location = location
+        self.wavelength = wavelength
+        #self.phase = phase
 
 if __name__ == '__main__':
-    animate_contours(0,1000,
-        res = (1280,720,),
-        frame_rate = 25,
-        pixel_scale = 50,
-        wavelength =  1,
-        separation = 0.1)
-#started at 2021 ish
+    res = (100,100,)
+    s = [
+        source((0,0,),1,0),
+        source((100,100,),1,0),
+        source((50,100,),1,0)
+    ]
+    universe = handler(s,res,5)
+    
+    universe.render_animation('test/image',(0,1000,),25)
