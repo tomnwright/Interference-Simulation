@@ -1,6 +1,13 @@
-import math,time
+import math,time,colour
 from PIL import Image, ImageDraw
 
+def clamp(n,upper,lower):
+    if n>upper:
+        return 1
+    elif n<lower:
+        return -1
+    else:
+        return n
 def get_dist2D(a,b):
     x = a[0]-b[0]
     y = a[1]-b[1]
@@ -10,36 +17,9 @@ def compile(images):
     for i in images[1:]:
         img = Image.alpha_composite(img,i)
     return img
-class colour:
-    #colour ramp
-    @staticmethod
-    def get_rgb(n):
-        return (
-            int(colour.get_r(n)*255),
-            int(colour.get_g(n)*255),
-            int(colour.get_b(n)*255)
-        )
-    @staticmethod
-    def get_r(n):
-        if n>0:
-            return 1.0
-        else:
-            return n+1
-    @staticmethod
-    def get_b(n):
-        if n<0:
-            return 1.0
-        else:
-            return 1-n
-    @staticmethod
-    def get_g(n):
-        if n>=0:
-            return 1-n
-        else:
-            return n+1
 class wave:
     @staticmethod
-    def get_Intensity(d, f, t, s, w):
+    def get_Intensity(d, f, t, s, w, p):
         '''
         Get Wave Intensity
 
@@ -47,13 +27,14 @@ class wave:
         :param f: frame rate
         :param t: time (frames)
         :param s: scale (pixels per meter)
-        :param w: wavelength'''
-        leading_edge = (t*s*w)/f
+        :param w: wavelength
+        :param p: phase (fraction of wavelegth)'''
+        leading_edge = ((t*s*w)/f) + (p*w*s)
         if d>leading_edge:
             return 0
         else:
             return math.sin(
-                (2*math.pi* ((f*d)-(t*s*w)))/(f*w*s)
+                (2*math.pi* ((f*d)-(t*s*w)-(f*p*w*s)))/(f*w*s)
             )
     @staticmethod
     def get_Peak(n,t,l,s,f):
@@ -96,9 +77,10 @@ class handler:
                         frame_rate,
                         time,
                         self.scale,
-                        s.wavelength
+                        s.wavelength,
+                        s.phase
                         )
-                i_total = (i_total)/len(self.sources)
+                i_total = (i_total)/len(self.sources) #THIS MAKES MULTISOURCE UNIVERSE WAVES FADED
                 img.putpixel((x,y,),colour.get_rgb(i_total))
         return img
     
@@ -148,15 +130,13 @@ class source:
     def __init__(self, location, wavelength, phase):
         self.location = location
         self.wavelength = wavelength
-        #self.phase = phase
+        self.phase = phase
 
 if __name__ == '__main__':
-    res = (100,100,)
+    res = (600,600,)
     s = [
-        source((0,0,),1,0),
-        source((100,100,),1,0),
-        source((50,100,),1,0)
+        source((250,300,),1,-1),
+        source((350,300,),1,0),
     ]
-    universe = handler(s,res,5)
-    
-    universe.render_animation('test/image',(0,1000,),25)
+    u = handler(s,res,20)
+    u.render_animation('test/anim',(0,500,),25)
