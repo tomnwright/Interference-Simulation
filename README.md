@@ -27,3 +27,9 @@ Also, *k* gives the leading edge of the wave, allowing restriction of the wave d
 ## Time Scale
 The <a href="https://www.codecogs.com/eqnedit.php?latex=t_{\text{seconds}}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?t_{\text{seconds}}" title="t_{\text{seconds}}" /></a> value above, is in terms of video seconds. However, if the waves are assumed to be sound in air, an absolute time value can be calculated. In one video second, the wave travels 1 wavelength. The speed of sound in air is 343 ms<sup>-1</sup>. Therefore, the sound wave takes <a href="https://www.codecogs.com/eqnedit.php?latex=\frac{1}{343}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\frac{1}{343}" title="\frac{1}{343}" /></a> virtual seconds to travel that one wavelength, 1m (only if <a href="https://www.codecogs.com/eqnedit.php?latex=\lambda&space;=&space;1" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\lambda&space;=&space;1" title="\lambda = 1" /></a>). Therefore, 1 video second (25 frames) = <a href="https://www.codecogs.com/eqnedit.php?latex=\frac{1}{343}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\frac{1}{343}" title="\frac{1}{343}" /></a> virtual seconds.
 
+
+## Demo
+Watch on YouTube:
+https://www.youtube.com/watch?v=CgBImdjw3hc
+
+[![Interference Demo Video](https://img.youtube.com/vi/CgBImdjw3hc/0.jpg)](https://www.youtube.com/watch?v=CgBImdjw3hc)
